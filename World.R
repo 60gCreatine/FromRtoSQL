@@ -1,8 +1,3 @@
-# Hent CSV direkte for GitHub
-library(readr)
-GitURL <- "https://raw.githubusercontent.com/cphstud/DALE22-W45/refs/heads/master/biler.csv"
-biler <- read_csv(url(GitURL))
-
 library(DBI)
 library(RMariaDB)
 
@@ -14,11 +9,20 @@ password <- paste0(Sys.getenv("password"),'"')
 # I workbench lav database med navnet newbilbasen
 # CREATE DATABASE newbilbasen;
 con <- dbConnect(MariaDB(),
-                 db="newbilbasen",
+                 db="world",
                  host="localhost",
                  port=3306,
                  user="root",
                  password=password)
 
 # Indsætter dataframen i SQL
-dbWriteTable(con,"cars",biler)
+countrydf <- dbReadTable(con,"country") 
+citydf <- dbReadTable(con,"city")
+cldf <- dbReadTable(con,"countrylanguage")
+mycictr <- left_join(citydf,countrydf,by="CountryCode")
+
+
+library(dplyr)
+countrycodes <- citydf %>% group_by(CountryCode) %>% mutate(ccpop=sum(Population)) %>% 
+  select(CountryCode,ccpop) %>% unique()
+
